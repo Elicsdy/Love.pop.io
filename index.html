@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浪漫心形温馨提示墙</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffafbd, #ffc3a0);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .heart-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            margin: 20px auto;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .tip-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .tip {
+            position: absolute;
+            width: 120px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: auto;
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .tip:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 25px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 30px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+        
+        .formula {
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .heart-container {
+                height: 400px;
+            }
+            
+            .tip {
+                width: 100px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="welcomeTitle">❤️ 浪漫心形温馨提示墙 ❤️</h1>
+        <p class="subtitle">100条暖心提示沿着心形轨迹依次出现</p>
+        
+        <div class="formula">
+            心形数学公式：x = 16sin³(t), y = 13cos(t) - 5cos(2t) - 2cos(3t) - cos(4t)
+        </div>
+        
+        <div class="heart-container">
+            <canvas id="heartCanvas"></canvas>
+            <div class="tip-container" id="tipContainer"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">开始展示</button>
+            <button id="fadeOutBtn" disabled>淡出所有提示</button>
+        </div>
+        
+        <div class="footer">
+            <p>点击任意提示可直接关闭 | 用数学公式绘制浪漫心形</p>
+        </div>
+    </div>
+
+    <script>
+        // 从URL获取名字参数
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        const userName = getQueryParam('name') || '亲爱的朋友';
+        document.getElementById('welcomeTitle').textContent = `❤️ ${userName}，送给你浪漫心形温馨提示 ❤️`;
+        
+        // 温馨提示内容
+        const tips = [
+            "愿你被世界温柔以待",
+            "每一天都是新的开始",
+            "保持微笑，生活更美好",
+            "你值得所有的美好",
+            "坚持做自己，你是最棒的",
+            "心中有爱，眼里有光",
+            "今天也要加油哦",
+            "你是独一无二的存在",
+            "相信明天会更好",
+            "小小的幸福就在身边",
+            "记得对自己好一点",
+            "世界因你而更美丽",
+            "保持热爱，奔赴山海",
+            "一切都会好起来的",
+            "你是最特别的那个人",
+            "生活处处有惊喜",
+            "心怀感恩，所遇皆温柔",
+            "今天也要开心呀",
+            "勇敢追求自己的梦想",
+            "你比想象中更强大",
+            "每一天都值得珍惜",
+            "微笑是最好的礼物",
+            "做自己的太阳",
+            "未来可期",
+            "爱自己是终身浪漫的开始",
+            "保持善良，温暖他人",
+            "简单生活，快乐常在",
+            "心中有光，不畏前行",
+            "你是生命中的一道光",
+            "一切美好都在路上",
+            "温柔待人，也被温柔以待",
+            "小小的坚持，大大的改变",
+            "相信自己的力量",
+            "生活因你而精彩",
+            "每一天都是限量版",
+            "心怀希望，向阳而生",
+            "你是最棒的",
+            "快乐其实很简单",
+            "保持好奇心，探索世界",
+            "你的存在让世界更美好",
+            "珍惜当下，享受生活",
+            "梦想终会实现",
+            "勇敢做自己",
+            "你是生活的艺术家",
+            "每一天都是新的冒险",
+            "微笑面对生活",
+            "你是不可替代的",
+            "生活因简单而美好",
+            "坚持就是胜利",
+            "你是最闪耀的星星",
+            "心怀感恩，幸福常在",
+            "今天也要元气满满",
+            "你是生活的勇士",
+            "保持乐观，一切皆有可能",
+            "你是爱的化身",
+            "生活处处是风景",
+            "你是最美好的存在",
+            "每一天都充满希望",
+            "你是生命的奇迹",
+            "保持初心，方得始终",
+            "你是最可爱的人",
+            "生活因你而不同",
+            "你是无限可能的开始",
+            "保持真诚，收获真心",
+            "你是世界的礼物",
+            "每一天都是新的礼物",
+            "你是生活的诗人",
+            "保持热情，拥抱生活",
+            "你是最温暖的光",
+            "生活因你而完整",
+            "你是梦想的追逐者",
+            "保持微笑，传递快乐",
+            "你是最勇敢的战士",
+            "生活因你而甜蜜",
+            "你是希望的种子",
+            "保持善良，收获美好",
+            "你是最珍贵的宝藏",
+            "生活因你而精彩纷呈",
+            "你是爱的使者",
+            "保持童心，快乐永驻",
+            "你是最闪亮的星",
+            "生活因你而充满色彩",
+            "你是勇气的象征",
+            "保持谦逊，不断成长",
+            "你是最美丽的风景",
+            "生活因你而意义非凡",
+            "你是智慧的化身",
+            "保持耐心，静待花开",
+            "你是最温暖的阳光",
+            "生活因你而充满爱",
+            "你是希望的灯塔",
+            "保持自信，展现自我",
+            "你是最独特的个体",
+            "生活因你而美好",
+            "你是快乐的源泉",
+            "保持感恩，珍惜拥有",
+            "你是最坚强的后盾",
+            "生活因你而充满奇迹",
+            "你是梦想的实践者",
+            "保持开放，接纳不同",
+            "你是最美好的遇见"
+        ];
+        
+        // 心形颜色
+        const heartColors = [
+            '#FF6B6B', '#FF8E8E', '#FFAAAA', '#FFC3C3',
+            '#FF6B9E', '#FF8EB4', '#FFAAC8', '#FFC3D8',
+            '#FF8C6B', '#FFA88E', '#FFBFAA', '#FFD4C3'
+        ];
+        
+        // 获取DOM元素
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        const tipContainer = document.getElementById('tipContainer');
+        const startBtn = document.getElementById('startBtn');
+        const fadeOutBtn = document.getElementById('fadeOutBtn');
+        
+        // 设置canvas尺寸
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        
+        // 初始化
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 绘制心形
+        function drawHeart() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 10;
+            
+            ctx.beginPath();
+            
+            for (let t = 0; t <= 2 * Math.PI; t += 0.01) {
+                // 心形参数方程
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+                
+                // 缩放并移动到中心
+                const plotX = centerX + x * scale;
+                const plotY = centerY - y * scale;
+                
+                if (t === 0) {
+                    ctx.moveTo(plotX, plotY);
+                } else {
+                    ctx.lineTo(plotX, plotY);
+                }
+            }
+            
+            // 设置心形样式
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 添加渐变填充
+            const gradient = ctx.createRadialGradient(
+                centerX, centerY, 0,
+                centerX, centerY, scale * 6
+            );
+            gradient.addColorStop(0, 'rgba(255, 107, 107, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 195, 160, 0.1)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+        }
+        
+        // 计算心形轨迹上的点
+        function getHeartPoints(count) {
+            const points = [];
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 10;
+            
+            for (let i = 0; i < count; i++) {
+                const t = (i / count) * 2 * Math.PI;
+                
+                // 心形参数方程
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+                
+                // 缩放并移动到中心
+                const plotX = centerX + x * scale;
+                const plotY = centerY - y * scale;
+                
+                points.push({ x: plotX, y: plotY });
+            }
+            
+            return points;
+        }
+        
+        // 创建温馨提示弹窗（逐个显示）
+        function createTips() {
+            // 清空容器
+            tipContainer.innerHTML = '';
+            
+            const points = getHeartPoints(100);
+            const usedTips = [...tips];
+            
+            // 随机打乱提示内容
+            for (let i = usedTips.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [usedTips[i], usedTips[j]] = [usedTips[j], usedTips[i]];
+            }
+            
+            // 创建弹窗（逐个显示）
+            points.forEach((point, index) => {
+                setTimeout(() => {
+                    const tip = document.createElement('div');
+                    tip.className = 'tip';
+                    tip.textContent = usedTips[index % usedTips.length];
+                    
+                    // 随机颜色
+                    const color = heartColors[Math.floor(Math.random() * heartColors.length)];
+                    tip.style.backgroundColor = color;
+                    
+                    // 设置位置（减去弹窗自身宽度和高度的一半，使其居中）
+                    tip.style.left = `${point.x - 60}px`;
+                    tip.style.top = `${point.y - 30}px`;
+                    
+                    // 添加点击关闭事件
+                    tip.addEventListener('click', function() {
+                        this.style.opacity = '0';
+                        this.style.transform = 'scale(0.5)';
+                        setTimeout(() => {
+                            if (this.parentNode) {
+                                this.parentNode.removeChild(this);
+                            }
+                        }, 500);
+                    });
+                    
+                    tipContainer.appendChild(tip);
+                    
+                    // 显示动画
+                    setTimeout(() => {
+                        tip.style.opacity = '1';
+                        tip.style.transform = 'scale(1)';
+                    }, 10);
+                    
+                    // 如果是最后一个弹窗，启用淡出按钮
+                    if (index === points.length - 1) {
+                        setTimeout(() => {
+                            fadeOutBtn.disabled = false;
+                        }, 100);
+                    }
+                    
+                }, index * 50); // 每个弹窗间隔50ms出现
+            });
+        }
+        
+        // 统一淡出所有弹窗（逐个淡出）
+        function fadeOutAllTips() {
+            const tips = document.querySelectorAll('.tip');
+            
+            tips.forEach((tip, index) => {
+                setTimeout(() => {
+                    tip.style.opacity = '0';
+                    tip.style.transform = 'scale(0.5)';
+                }, index * 30); // 每个弹窗间隔30ms淡出
+            });
+            
+            // 移除元素
+            setTimeout(() => {
+                tipContainer.innerHTML = '';
+                fadeOutBtn.disabled = true;
+                startBtn.disabled = false;
+            }, tips.length * 30 + 500);
+        }
+        
+        // 事件监听
+        startBtn.addEventListener('click', function() {
+            this.disabled = true;
+            drawHeart();
+            createTips();
+        });
+        
+        fadeOutBtn.addEventListener('click', function() {
+            this.disabled = true;
+            fadeOutAllTips();
+        });
+        
+        // 初始绘制心形
+        drawHeart();
+    </script>
+</body>
+</html>
